@@ -1,0 +1,26 @@
+h1. GitLib / Jupiler
+
+GitLib / Jupiler is a simple git entry gate script working with an webservice replying to some specific calls to authorize access or not to a "user" to a "repository".
+
+h2. Excepted API calls :
+
+All calls are prefixed with the "/api/git/" path.
+
+h3. GET rights
+
+Syntax : GET : rights?username=#{username}&repository=#{repository_name}
+
+Use : return true or false depending on the user rights to access this repository.
+
+
+h2. Other notes
+
+This tool has been primarily developped to use with git_front a Ruby apps hosting tool.
+
+NOTE : alpha status.
+
+h2. History
+
+This library is based on code under MIT licence originally written for IIIaquarii a rails based github / gitosis clone.
+
+Before starting this project we dissected Gitauth, to extract its very essence. We then decided to start from scratch on our own, tossing everything and starting from a clean slate. So it probably looks similar to GithAuth, or Gitosis, since these projects are pretty much the state-of-the-art.
