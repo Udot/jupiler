@@ -3,8 +3,9 @@
 begin
   require 'pathname'
   base = Pathname(__FILE__).expand_path
-  lib = base + "../lib/git_lib.rb"
-
+  filename = base.to_s.split('/').last
+  lib_path = base.to_s.gsub("/#{filename}",'')
+  lib = lib_path + "/lib/git_lib.rb"
   require lib
 
   # kick start the thing :

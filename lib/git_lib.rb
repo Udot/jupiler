@@ -1,23 +1,28 @@
+SRC_DIR = "/var/opt/git_shell/jupiler_production/current"
+
 module GitLib
   begin
     # Try to require the preresolved locked set of gems.
-    require File.expand_path('../../../../.bundle/environment', __FILE__)
+    env_path = "#{SRC_DIR}/.bundle/environment"
+    require env_path
   rescue LoadError
     # Fall back on doing an unlocked resolve at runtime.
     require "rubygems"
     require "bundler"
-    gemfile_path= File.expand_path('../../../../', __FILE__)
+    env_path
+    gemfile_path = "#{SRC_DIR}"
     ENV['BUNDLE_GEMFILE'] ||= File.join(gemfile_path, 'Gemfile')
     Bundler.setup
   end
   require "rails_config"
   require 'pathname'
+  require 'fileutils'
 
   # loading up the config
   RailsConfig.setup do |config|
     config.const_name = "Settings"
   end
-  RailsConfig.load_and_set_settings File.expand_path("../config/settings.yml", __FILE__)
+  RailsConfig.load_and_set_settings File.expand_path("#{SRC_DIR}/config/settings.yml")
 
   module EggApi
     extend self
@@ -47,6 +52,7 @@ module GitLib
      :user_email, :user_id, :read, :write, :kind, :fresh_cmd
 
     def logger(message)
+      FileUtils.mkdir(Settings.jup_sh.home + "/logs") unless File.exist?(Settings.jup_sh.home + "/logs")
       File.open(Settings.jup_sh.home + "/logs/general.log", "a") do |log|
         log.puts Time.now.strftime("%d/%m/%y %H:%M ") + message
       end
@@ -119,7 +125,7 @@ module GitLib
       if !self.cmd_opt.empty?
         self.fake_path = repo_name
         # real path is something like /jupiler_home/repositories/username/repo_name
-        self.real_path = Settings.jup_sh.home + "/repositories/" +
+        self.real_path = Settings.jup_sh.home + '/' +
                 self.username_from_cmd + "/" +
                 self.fake_path
         return self.real_path
@@ -161,11 +167,11 @@ module GitLib
         # username is guessed from the command, the ssh key as already been accepted
         # repository name is guessed from the command too, it gives Egg name
         # expected : true or false
-        has_right = EggApi.has_right?(username, repo_name)
+        has_right = EggApi.check_rights(username, repo_name)
 
         if has_right
           # ok user is allowed to run the command (we don't check for read or write)
-          command.logger("#{command.user_login} has #{a_right.right} right")
+          command.logger("#{command.user_login} can use #{repo_name}")
           command.run
         else
           # user has not right to pass
