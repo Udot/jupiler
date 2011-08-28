@@ -14,7 +14,7 @@ elif [[ -s "/usr/local/rvm/scripts/rvm" ]] ; then
 else
 
   printf "ERROR: An RVM installation was not found.\n"
-	exit(1)
+	exit 1
 fi
 
 # launching the interesting part
