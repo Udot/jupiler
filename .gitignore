@@ -2,3 +2,4 @@ bundler/*
 log/*
 .bundle/
 config/settings/production.yml
+lib/deploy.rb
