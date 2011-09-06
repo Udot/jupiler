@@ -12,7 +12,7 @@ begin
   GitLib::Command.kickstart!(ARGV[0], ENV["SSH_ORIGINAL_COMMAND"])
 rescue => e
   STDERR.puts "REMOTE: An error occured, please contact administrator."
-  a = File.open(File.expand_path("../../../errors_sh", __FILE__), "a")
+  a = File.open(File.expand_path("/var/opt/git_shell/errors_sh", __FILE__), "a")
   a << Time.now
   a << " - "
   a << e
