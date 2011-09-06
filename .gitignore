@@ -1,5 +1,4 @@
 bundler/*
 log/*
 .bundle/
-config/settings.yml
 config/settings/production.yml
