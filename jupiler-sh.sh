@@ -18,4 +18,4 @@ else
 fi
 
 # launching the interesting part
-ruby /var/opt/git_shell/jupiler_production/current/jupiler-sh.rb $1
+ruby /var/opt/git_shell/jupiler-sh.rb $1
