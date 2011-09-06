@@ -8,4 +8,3 @@ gem "rails_config"
 # Rails has selected sqlite3.
 gem "sqlite3-ruby", :require => "sqlite3"
 
-gem "capistrano"
