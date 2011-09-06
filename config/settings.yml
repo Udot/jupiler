@@ -1,0 +1,4 @@
+jup_sh:
+  home: /var/gits
+git:
+  shell: /usr/bin/git-shell
