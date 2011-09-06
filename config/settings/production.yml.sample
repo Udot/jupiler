@@ -1,0 +1,6 @@
+egg_api:
+  host: localhost
+  port: 8080
+  ssl: false
+  token: sometoken_provided_by_the_main_webpanel
+  username: shell_user
