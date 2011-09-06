@@ -31,29 +31,30 @@ module GitLib
     end
     private
     def get(request)
+      require 'yaml'
       require 'net/http'
       require "net/https"
-      http_r = Net::HTTP.new(Settings.egg_api.host, Settings.egg_api.port)
-      http_r.use_ssl = Settings.egg_api.ssl
+      config = YAML.load_file("#{SRC_DIR}/config/settings/production.yml")
+      http_r = Net::HTTP.new(config['egg_api']['host'], config['egg_api']['port'])
+      http_r.use_ssl = config['egg_api']['ssl']
       response = nil
       http_r.start() do |http|
         req = Net::HTTP::Get.new('/api/git/' + request)
-        req.add_field("USERNAME", Settings.egg_api.username)
-        req.add_field("TOKEN", Settings.egg_api.token)
+        req.add_field("USERNAME", config['egg_api']['username'])
+        req.add_field("TOKEN", config['egg_api']['token'])
         response = http.request(req)
       end
       return response.body
     end
   end
 
-
   class Command
     attr_accessor :cmd_type, :cmd_cmd, :cmd_opt, :fake_path, :real_path, :git_user, :user_login,
      :user_email, :user_id, :read, :write, :kind, :fresh_cmd
 
     def logger(message)
-      FileUtils.mkdir(Settings.jup_sh.home + "/logs") unless File.exist?(Settings.jup_sh.home + "/logs")
-      File.open(Settings.jup_sh.home + "/logs/general.log", "a") do |log|
+      FileUtils.mkdir(SRC_DIR + "/logs") unless File.exist?(SRC_DIR + "/logs")
+      File.open(SRC_DIR + "/logs/general.log", "a") do |log|
         log.puts Time.now.strftime("%d/%m/%y %H:%M ") + message
       end
     end
