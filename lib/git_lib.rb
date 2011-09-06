@@ -1,4 +1,5 @@
 SRC_DIR = "/var/opt/git_shell"
+require 'yaml'
 
 module GitLib
   begin
