@@ -1,4 +1,4 @@
-SRC_DIR = "/var/opt/git_shell/jupiler_production/current"
+SRC_DIR = "/var/opt/git_shell"
 
 module GitLib
   begin
