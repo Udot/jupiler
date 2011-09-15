@@ -18,14 +18,40 @@ module GitLib
     ENV['BUNDLE_GEMFILE'] ||= File.join(gemfile_path, 'Gemfile')
     Bundler.setup
   end
+  require "rails_config"
+  require "brawne"
   
   # loading up the config
   RailsConfig.setup { |config| config.const_name = "Settings" }
-  RailsConfig.load_and_set_settings File.expand_path("#{SRC_DIR}/config/settings.yml")
+  RailsConfig.load_and_set_settings(File.expand_path("#{SRC_DIR}/config/settings.yml"), File.expand_path("#{SRC_DIR}/config/settings/production.yml"))
+
+  class SimpleLogger
+    def initialize(file)
+      @log_file = file
+    end
+  
+    def info(msg)
+      write("info",msg)
+    end
+    def warn(msg)
+      write("warn",msg)
+    end
+    def error(msg)
+      write("error",msg)
+    end
+    def write(level, msg)
+      File.open(@log_file, "a") { |f| f.puts "#{level[0].capitalize} :: #{Time.now.to_s} : #{msg}"}
+    end
+  end
+
     
   class Command
+   # loading up the config
+  RailsConfig.setup { |config| config.const_name = "Settings" }
+  RailsConfig.load_and_set_settings(File.expand_path("#{SRC_DIR}/config/settings.yml"), File.expand_path("#{SRC_DIR}/config/settings/production.yml"))
     attr_accessor :cmd_type, :cmd_cmd, :cmd_opt, :fake_path, :real_path, :git_user, :user_login,
      :user_email, :user_id, :read, :write, :kind, :fresh_cmd, :brawne
+    attr_accessor :logger
 
     def self.check_rights(username, repository_name)
       result = Brawne::Request.get("/api/git/rights?username=#{username}&repository=#{repository_name}")
@@ -33,13 +59,6 @@ module GitLib
       return false
     end
      
-    def logger(message)
-      FileUtils.mkdir(SRC_DIR + "/logs") unless File.exist?(SRC_DIR + "/logs")
-      File.open(SRC_DIR + "/logs/general.log", "a") do |log|
-        log.puts Time.now.strftime("%d/%m/%y %H:%M ") + message
-      end
-    end
-
     def is_write?
       return write
     end
@@ -75,6 +94,7 @@ module GitLib
         config.user = Settings.egg_api.username
         config.token = Settings.egg_api.token
       end
+      @logger = SimpleLogger.new(SRC_DIR + "/logs/general.log")
     end
 
     def repo(command)
@@ -83,7 +103,6 @@ module GitLib
     # basic sanity check and split of the command line
     def check(command)
       self.kind = "git" # that's for sure
-      self.logger("Git command")
       reads = ["git-upload-pack", "git upload-pack"]
       writes = ["git-receive-pack", "git receive-pack"]
       sh_command = command.split(" ")
@@ -100,11 +119,11 @@ module GitLib
       # check the command for type, not really used but hey, always good to have
       if reads.include?(self.cmd_cmd)
         self.read = true
-        self.logger("Read command")
+        logger.info("Read command")
       end
       if writes.include?(self.cmd_cmd)
         self.write = true
-        self.logger("Write command")
+        logger.info("Write command")
       end
       return true
     end
@@ -135,39 +154,45 @@ module GitLib
 
     # the exec of the command
     def run
-      self.logger("Running command : git-shell -c #{@cmd_cmd} '#{@real_path}'")
+      logger.info("Running command : git-shell -c #{@cmd_cmd} '#{@real_path}'")
       if system(Settings.git.shell, "-c", "#{@cmd_cmd} '#{@real_path}'")
-        self.logger("\t\tOK")
+        logger.info("\t\tOK")
       else
-        self.logger("\t\tKO")
+        logger.info("\t\tKO")
       end
     end
 
     def self.kickstart!(user, sh_command)
-      key = nil
-      command = self.new(user, sh_command)
-      if command.check(sh_command)
-        # extracting precious info from command
-        username = command.username_from_cmd
-        repo_path = command.repo_path
-        repo_name = command.repo_name
-        
-        # we need to know if user as access to the requested repository
-        # username is guessed from the command, the ssh key as already been accepted
-        # repository name is guessed from the command too, it gives Egg name
-        # expected : true or false
-        has_right = Command.check_rights(username, repo_name)
-
-        if has_right
-          # ok user is allowed to run the command (we don't check for read or write)
-          command.logger("#{command.user_login} can use #{repo_name}")
-          command.run
+      begin
+        key = nil
+        command = self.new(user, sh_command)
+        command.logger.info("kick start")
+        if command.check(sh_command)
+          # extracting precious info from command
+          username = command.username_from_cmd
+          repo_path = command.repo_path
+          repo_name = command.repo_name
+          
+          # we need to know if user as access to the requested repository
+          # username is guessed from the command, the ssh key as already been accepted
+          # repository name is guessed from the command too, it gives Egg name
+          # expected : true or false
+          command.logger.info("cheking rights")
+          has_right = Command.check_rights(username, repo_name)
+  
+          if has_right
+            # ok user is allowed to run the command (we don't check for read or write)
+            command.logger.info("#{command.user_login} can use #{repo_name}")
+            command.run
+          else
+            # user has not right to pass
+            command.logger.info("insufficiant rights for #{command.user_login}")
+          end
         else
-          # user has not right to pass
-          command.logger("insufficiant rights for #{command.user_login}")
+          command.logger.info("Command Invalid !")
         end
-      else
-        command.logger("Command Invalid !")
+      rescue => e
+	STDERR.puts e.to_s
       end
     end
   end
