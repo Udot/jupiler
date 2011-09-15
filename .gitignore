@@ -1,3 +1,4 @@
+.rvmrc
 bundler/*
 log/*
 .bundle/
