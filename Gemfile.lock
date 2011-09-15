@@ -2,7 +2,7 @@ GEM
   remote: http://gemcutter.org/
   specs:
     activesupport (3.0.3)
-    brawne (0.0.3)
+    brawne (0.0.4)
     rails_config (0.2.4)
       activesupport (>= 3.0)
 
@@ -10,5 +10,5 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
-  brawne (= 0.0.3)
+  brawne (= 0.0.4)
   rails_config
