@@ -28,30 +28,13 @@ module GitLib
   module EggApi
     extend self
     def check_rights(username,repository_name)
-      return get("rights?username=#{username}&repository=#{repository_name}")
-    end
-    private
-    def get(request)
-      require 'yaml'
-      require 'net/http'
-      require "net/https"
-      config = YAML.load_file("#{SRC_DIR}/config/settings/production.yml")
-      http_r = Net::HTTP.new(config['egg_api']['host'], config['egg_api']['port'])
-      http_r.use_ssl = config['egg_api']['ssl']
-      response = nil
-      http_r.start() do |http|
-        req = Net::HTTP::Get.new('/api/git/' + request)
-        req.add_field("USERNAME", config['egg_api']['username'])
-        req.add_field("TOKEN", config['egg_api']['token'])
-        response = http.request(req)
-      end
-      return response.body
+      return @brawne.get("/api/git/rights?username=#{username}&repository=#{repository_name}")
     end
   end
 
   class Command
     attr_accessor :cmd_type, :cmd_cmd, :cmd_opt, :fake_path, :real_path, :git_user, :user_login,
-     :user_email, :user_id, :read, :write, :kind, :fresh_cmd
+     :user_email, :user_id, :read, :write, :kind, :fresh_cmd, :brawne
 
     def logger(message)
       FileUtils.mkdir(SRC_DIR + "/logs") unless File.exist?(SRC_DIR + "/logs")
@@ -88,6 +71,9 @@ module GitLib
       @user = user
       @kind = nil
       @fresh_cmd = command
+      config = YAML.load_file("#{SRC_DIR}/config/settings/production.yml")
+      @brawne = Brawne.new(config['egg_api']['host'], config['egg_api']['port'], 
+        config['egg_api']['ssl'], config['egg_api']['username'], config['egg_api']['token']))
     end
 
     def repo(command)
