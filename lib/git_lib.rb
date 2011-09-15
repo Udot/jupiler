@@ -1,7 +1,10 @@
 SRC_DIR = "/var/opt/git_shell"
 require 'yaml'
+require 'pathname'
+require 'fileutils'
 
 module GitLib
+  
   begin
     # Try to require the preresolved locked set of gems.
     env_path = "#{SRC_DIR}/.bundle/environment"
@@ -15,22 +18,17 @@ module GitLib
     ENV['BUNDLE_GEMFILE'] ||= File.join(gemfile_path, 'Gemfile')
     Bundler.setup
   end
-  require "rails_config"
-  require 'pathname'
-  require 'fileutils'
-
-  # loading up the config
-  RailsConfig.setup do |config|
-    config.const_name = "Settings"
-  end
-  RailsConfig.load_and_set_settings File.expand_path("#{SRC_DIR}/config/settings.yml")
   
+  # loading up the config
+  RailsConfig.setup { |config| config.const_name = "Settings" }
+  RailsConfig.load_and_set_settings File.expand_path("#{SRC_DIR}/config/settings.yml")
+    
   class Command
     attr_accessor :cmd_type, :cmd_cmd, :cmd_opt, :fake_path, :real_path, :git_user, :user_login,
      :user_email, :user_id, :read, :write, :kind, :fresh_cmd, :brawne
 
-    def check_rights(username, repository_name)
-      result = brawne.get("/api/git/rights?username=#{username}&repository=#{repository_name}")
+    def self.check_rights(username, repository_name)
+      result = Brawne::Request.get("/api/git/rights?username=#{username}&repository=#{repository_name}")
       return JSON.parse(result[1])["access"] if result[0].to_i == 200
       return false
     end
@@ -70,9 +68,13 @@ module GitLib
       @user = user
       @kind = nil
       @fresh_cmd = command
-      config = YAML.load_file("#{SRC_DIR}/config/settings/production.yml")
-      @brawne = Brawne.new(config['egg_api']['host'], config['egg_api']['port'], 
-        config['egg_api']['ssl'], config['egg_api']['username'], config['egg_api']['token']))
+      Brawne.setup do |config| 
+        config.host = Settings.egg_api.host
+        config.port = Settings.egg_api.port
+        config.ssl = Settings.egg_api.ssl
+        config.user = Settings.egg_api.username
+        config.token = Settings.egg_api.token
+      end
     end
 
     def repo(command)
@@ -154,7 +156,7 @@ module GitLib
         # username is guessed from the command, the ssh key as already been accepted
         # repository name is guessed from the command too, it gives Egg name
         # expected : true or false
-        has_right = EggApi.check_rights(username, repo_name)
+        has_right = Command.check_rights(username, repo_name)
 
         if has_right
           # ok user is allowed to run the command (we don't check for read or write)

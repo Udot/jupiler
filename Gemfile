@@ -2,4 +2,4 @@
 source 'http://gemcutter.org'
 
 gem "rails_config"
-gem "brawne", "0.0.1"
+gem "brawne", "0.0.3"
