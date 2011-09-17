@@ -18,4 +18,4 @@ else
 fi
 
 # launching the interesting part
-ruby /var/opt/git_shell/jupiler-sh.rb $1
+cd /var/opt/git_shell/ && bundle exec ruby jupiler-sh.rb $1

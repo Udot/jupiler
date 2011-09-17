@@ -20,6 +20,7 @@ module GitLib
   end
   require "rails_config"
   require "brawne"
+  require 'json'
   
   # loading up the config
   RailsConfig.setup { |config| config.const_name = "Settings" }
