@@ -3,6 +3,7 @@ GEM
   specs:
     activesupport (3.0.3)
     brawne (0.0.6)
+    json (1.6.0)
     rails_config (0.2.4)
       activesupport (>= 3.0)
 
@@ -11,4 +12,5 @@ PLATFORMS
 
 DEPENDENCIES
   brawne (= 0.0.6)
+  json
   rails_config
